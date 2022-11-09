@@ -7,16 +7,16 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class DemoApplication {
 	public static void main(String[] args) throws ClassNotFoundException {
 		
-		//ok연결완료
+		//ok연결완료->하하하
 		Class.forName("org.postgresql.Driver");  
-        
+	
         String     connurl  = "jdbc:postgresql://localhost:5432/postgres";
         String     user     = "postgres";
         String     password = "1234";
  
         try (Connection connection = DriverManager.getConnection(connurl, user, password);) {
               Statement stmt = connection.createStatement();
-              ResultSet rs = stmt.executeQuery("SELECT VERSION() AS version");
+              ResultSet rs = stmt.executeQuery("select version()");
  
               while (rs.next()) {
                   String version = rs.getString("version");
