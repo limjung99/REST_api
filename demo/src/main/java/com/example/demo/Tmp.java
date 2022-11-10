@@ -6,13 +6,11 @@ package com.example.demo;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.jsoup.*;
-import org.jsoup.Connection;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import java.io.IOException;
 import java.sql.*;
-
-
+import java.sql.Connection;
 
 
 // Annotation
@@ -20,15 +18,18 @@ import java.sql.*;
 @RequestMapping("Endpoint/students")
 // Class->tmp는 어노테이션에 의해 controller class 
 public class Tmp {
-		Document h; //문서객체 ->html... parsing해주어서 가공해줘야함 
+	//처음 local서버가 구동될때, html값을 crawling해오고, db에 넣고 close
+		Document h;
 		Element phds;
 		Element masters;
 		Element unders;
+		DbController dcon;
 		
-		Tmp() {
+
+		Tmp() throws ClassNotFoundException { // 생성될 때, 크롤링 후 파싱 & DB에 insert
 			try {
 				String URL = "https://apl.hongik.ac.kr/lecture/dbms";
-				Connection conn = Jsoup.connect(URL);
+				org.jsoup.Connection conn = Jsoup.connect(URL);
 				Document html = conn.get();
 				this.h=html;
 			}
@@ -39,7 +40,21 @@ public class Tmp {
 			masters = h.getElementsByClass("n8H08c UVNKR").get(1); //masters element
 			unders = h.getElementsByClass("n8H08c UVNKR").get(2); //unders element
 			//constructor로 parsing한 element 삽입 
-		
+			
+			this.dcon = new DbController();
+			
+			String phds_list = phds.text();
+			String masters_list = masters.text();
+			String unders_list = unders.text();
+			
+			
+			
+			
+			
+			
+			
+			
+			
 		}
 
 		@RequestMapping("/degree")
@@ -48,15 +63,10 @@ public class Tmp {
 		    //<name>:<degree>로return 
 		    public String show_degree(@RequestParam(value="name") String name)
 		    {	
-			 	String m = phds.text();
-			 	
-			 	return "hi";
+			 	String t=unders.
+			 	return t;
 			 }
 
-			 	
-		    	
-	
-		 
 		 @RequestMapping("/email")
 		    //get  Method
 		    @ResponseBody
@@ -73,15 +83,9 @@ public class Tmp {
 		        // Print statement
 		        return stat;
 		    }
-		 @RequestMapping("/register")
-		    // put method
-		    @ResponseBody
-		    public String put_register(@RequestParam(value="register") String register)
-		    {
-	
-		        // Print statement
-		        return register;
-		    }
+		 
+		 
+
 		 
 		
 		 	
