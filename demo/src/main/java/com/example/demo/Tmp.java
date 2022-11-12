@@ -5,6 +5,9 @@ package com.example.demo;
 // Importing required classes
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+
+import ch.qos.logback.core.recovery.ResilientSyslogOutputStream;
+
 import org.jsoup.*;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -19,16 +22,15 @@ import java.util.Vector;
 // Annotation
 @Controller
 @RequestMapping("Endpoint/students")
-// Class->tmp는 어노테이션에 의해 controller class 
 public class Tmp {
 	//처음 local서버가 구동될때, html값을 crawling해오고, db에 넣고 close
 		Document h;
-		Element phds;
-		Element masters;
-		Element unders;
 		DbController dcon;
-		int sid=0;
-
+		int sid;
+		Element lists[];
+		Vector<Human> v;
+		
+		//constructor
 		Tmp() throws ClassNotFoundException, SQLException { // 생성될 때, 크롤링 후 파싱 & DB에 insert
 			try {
 				String URL = "https://apl.hongik.ac.kr/lecture/dbms";
@@ -39,46 +41,59 @@ public class Tmp {
 			catch(IOException e) {
 				e.printStackTrace();
 			}
-			Element lists[] = new Element[3];
+			//human객체를 저장하는 vector생성
+			v= new Vector<Human>();
+			
+			sid=0;
+			Element lists[] = new Element[3]; //index 0,1,2 순으로 phd, graduate, undergraduate
+			
 			int elements_size = h.getElementsByClass("n8H08c UVNKR").size();
 			
 			for(int i=0;i<elements_size;i++) {
 				lists[i] = h.getElementsByClass("n8H08c UVNKR").get(i);
 			}
+			
+			//human object 생성
 			for(int i=0;i<elements_size;i++) {
 				for(Element e:lists[i].select("li")) {
 					StringTokenizer st = new StringTokenizer(e.text(),",");
+					while(st.hasMoreElements()) {
+						String name = st.nextToken().trim();
+					
+						String email = st.nextToken().trim();
+					
+						int graduation = Integer.parseInt(st.nextToken().trim());
+						int tmp_sid = sid;
+						sid++;
+						String degree = "";
+						if(i==0) {
+							degree="PhD";
+						}
+						else if(i==1) {
+							degree="Master";
+						}
+						else if(i==2) {
+							degree="Undergraduate";
+						}
+						Human tmp_h = new Human(tmp_sid,name,email,degree,graduation);
+						v.add(tmp_h);
+					}
 					
 				}
 			}
 			
-			//tokenizing
+			/*DbController.initialize_DB();*/ //DB생성 hongik->students
+			
+			//human object vector를 순회하면서, 각 human을 데이터베이스에 인풋
+			//처음 긁어온 html을 li별로 parsing 후 human 객체를 생성해주었다.
+			//이 후 , human객체의 배열을 DB에 순회하면서 넣어준다. 
 			
 			
-			DbController.insert_to_DB();
-			/*
-			
-			while(v.get(0).hasMoreElements()) {
-				System.out.println(v.get(0).nextToken());
-			}
-			
-			
-			
-		/*	for(int i=0;i<3;i++) {
-				while(v.get(i).hasMoreElements()) {
-					String name;
-					String email;
-					String degree;
-					int grad;
-					int sid;
-					
-					
-				}
+		/*	for(int i=0;i<v.size();i++) {
+				DbController.insert_to_DB(v.get(i)); 
 			}*/
 			
-			
-			
-		
+	
 			
 		}
 
@@ -86,30 +101,108 @@ public class Tmp {
 		    //get  Method
 		    @ResponseBody
 		    //<name>:<degree>로return 
-		    public String show_degree(@RequestParam(value="name") String name)
+		    public String show_degree(@RequestParam(value="name") String name) throws SQLException
 		    {	
+				ResultSet rs;
+				Vector<String> degree_v = new Vector<String>();
+				String ans=null;
+				String sql = "select degree from students where name='"+name+"'";
+				rs=DbController.execute_query(sql);
+				while(rs.next()) {
+					String tmp = rs.getString("degree");
+					degree_v.add(tmp);
+				}
+				if(degree_v.size()==0) {
+					ans="No such student";
+				}
 				
-			 	return name;
+				else if(degree_v.size()==1) {
+					ans=name+":"+degree_v.get(0);
+				}
+				else {
+					ans="There are multiple students with the same name. Please contact the administrator by phone.";	
+				}
+				
+				return ans;
+				
 			 }
 
 		 @RequestMapping("/email")
 		    //get  Method
 		    @ResponseBody
-		    public String show_email(@RequestParam(value="email") String email)
+		    public String show_email(@RequestParam(value="name") String name) throws SQLException
 		    {
-		        // Print statement
-		        return email;
+			 	ResultSet rs;
+			 	Vector<String> email_v = new Vector<String>();
+				String ans=null;
+				String sql = "select email from students where name='"+name+"'";
+				rs=DbController.execute_query(sql);
+				//resultSet을 순회하면서,이메일의 집합을 벡터에 push해준다.
+				while(rs.next()) {
+					String tmp = rs.getString("email");
+					email_v.add(tmp);
+				}
+				if(email_v.size()==0) {
+					ans="No such student";
+				}
+				
+				else if(email_v.size()==1) {
+					ans=name+":"+email_v.get(0);
+				}
+				else {
+					ans="There are multiple students with the same name. Please contact the administrator by phone.";	
+				}
+			
+				
+				return ans;
 		    }
 		 @RequestMapping("/stat")
 		    // get Method
 		    @ResponseBody
-		    public String show_stat(@RequestParam(value="stat") String stat)
+		    public String show_stat(@RequestParam(value="degree") String degree) throws SQLException
 		    {
-		        // Print statement
-		        return stat;
+			 	ResultSet rs;
+				String ans="Number of "+degree+"'s student:";
+				String sql = "select count(*) from students where degree='"+degree+"'";
+	
+				rs=DbController.execute_query(sql);
+				rs.next();
+				int tmp = rs.getInt(1);
+				
+				ans=ans+tmp;
+				
+				return ans;
+		        
 		    }
 		 
+		 @RequestMapping(value="/register", method = RequestMethod.PUT)
+		    // put Method
+		    @ResponseBody
+		    public String regist (@RequestParam String name,@RequestParam String email,@RequestParam int grad ) throws SQLException 
+		    {
+			 	//동명이인 찾기
+			 	String ans="";
+			 	String sql = "select count(*) from students where name='"+name+"'";
+			 	ResultSet rs = DbController.execute_query(sql);
+			 	rs.next();
+			 	if(rs.getInt(1)==0) {//동명이인이 없음 
+			 		//다음 sid 찾아오기
+				 	sql = "select max(sid) from students";
+				 	rs = DbController.execute_query(sql);
+				 	rs.next();
+				 	int new_sid=rs.getInt(1)+1;
+				 	
+				 	sql = "insert into students values ("+new_sid+",'"+name+"','"+email+"','undergraduate',"+grad+")";
+				 	int t= DbController.update_query(sql);
+				 	ans = "Registration successful";
+			 	}
+			 	else {//동명이인 존재 
+			 		ans =  "Already registered";
+			 	}
+		        return ans;
+		    }
 		 
+		 	
 
 		 
 		
