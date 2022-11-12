@@ -1,44 +1,49 @@
 package com.example.demo;
 import java.sql.*;
+import java.util.StringTokenizer;
+import java.util.Vector;
 
 public class DbController {
-	Statement stmt;
+	/*Class.forName("org.postgresql.Driver");  */
+   static String    connurl  = "jdbc:postgresql://localhost:5432/postgres";
+   static String     user     = "postgres";
+   static String     password = "1234";
 	
 	
-	DbController() throws ClassNotFoundException{
-		Class.forName("org.postgresql.Driver");  
-        String     connurl  = "jdbc:postgresql://localhost:5432/postgres";
-        String     user     = "postgres";
-        String     password = "1234";
- 
-        try (Connection connection = DriverManager.getConnection(connurl, user, password);) {
+
+	static void insert_to_DB() throws SQLException { //human object를 전달받아, sql에 input 
+		/*stmt.executeQuery("insert into students(sid,name,email,degree,graduation) values("+sid+","+name+","+email+","+degree+","+grad+");" );*/
+		 try (Connection connection = DriverManager.getConnection(connurl, user, password);) {
+	            Statement stmt = connection.createStatement();
+	            ResultSet rs = stmt.executeQuery("select version()");
+	            while(rs.next()) {
+	            	String r = rs.getString("version");
+	            	System.out.println(r);
+	            }
+	            
+	       
+	        }
+	        catch (SQLException e) {
+	            e.printStackTrace();
+	        }
+	}
+	
+	static void execute_query(String s) throws SQLException { //요청된 query를 실행 
+		try (Connection connection = DriverManager.getConnection(connurl, user, password);) {
             Statement stmt = connection.createStatement();
-            this.stmt = stmt;
-           /*   ResultSet rs = stmt.executeQuery("select version()");
- 
-              while (rs.next()) {
-                  String version = rs.getString("version");
-                  System.out.println(version);                  
-              }           
-            rs.close();
-            stmt.close();
-            connection.close();*/
+            ResultSet rs = stmt.executeQuery("select version()");
+            while(rs.next()) {
+            	String r = rs.getString("version");
+            	System.out.println(r);
+            }
+            
+            
         }
         catch (SQLException e) {
-            e.printStackTrace();
-        }
-        
- 
-	}
-	
-	void insert_to_DB(String s) { //파싱 후 insert to postgres
-		
-	}
-	
-	void execute_query(String s) { //요청된 query를 실행 
-		
+            
 	}
 	
 	
 	
+}
 }

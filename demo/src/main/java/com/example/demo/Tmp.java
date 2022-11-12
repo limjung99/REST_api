@@ -8,10 +8,13 @@ import org.springframework.web.bind.annotation.*;
 import org.jsoup.*;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+
 import java.io.IOException;
 import java.sql.*;
 import java.sql.Connection;
-
+import java.util.StringTokenizer;
+import java.util.Vector;
 
 // Annotation
 @Controller
@@ -24,9 +27,9 @@ public class Tmp {
 		Element masters;
 		Element unders;
 		DbController dcon;
-		
+		int sid=0;
 
-		Tmp() throws ClassNotFoundException { // 생성될 때, 크롤링 후 파싱 & DB에 insert
+		Tmp() throws ClassNotFoundException, SQLException { // 생성될 때, 크롤링 후 파싱 & DB에 insert
 			try {
 				String URL = "https://apl.hongik.ac.kr/lecture/dbms";
 				org.jsoup.Connection conn = Jsoup.connect(URL);
@@ -36,24 +39,46 @@ public class Tmp {
 			catch(IOException e) {
 				e.printStackTrace();
 			}
-			phds = h.getElementsByClass("n8H08c UVNKR").get(0); //phds element
-			masters = h.getElementsByClass("n8H08c UVNKR").get(1); //masters element
-			unders = h.getElementsByClass("n8H08c UVNKR").get(2); //unders element
-			//constructor로 parsing한 element 삽입 
+			Element lists[] = new Element[3];
+			int elements_size = h.getElementsByClass("n8H08c UVNKR").size();
 			
-			this.dcon = new DbController();
+			for(int i=0;i<elements_size;i++) {
+				lists[i] = h.getElementsByClass("n8H08c UVNKR").get(i);
+			}
+			for(int i=0;i<elements_size;i++) {
+				for(Element e:lists[i].select("li")) {
+					StringTokenizer st = new StringTokenizer(e.text(),",");
+					
+				}
+			}
 			
-			String phds_list = phds.text();
-			String masters_list = masters.text();
-			String unders_list = unders.text();
-			
-			
-			
-			
-			
-			
+			//tokenizing
 			
 			
+			DbController.insert_to_DB();
+			/*
+			
+			while(v.get(0).hasMoreElements()) {
+				System.out.println(v.get(0).nextToken());
+			}
+			
+			
+			
+		/*	for(int i=0;i<3;i++) {
+				while(v.get(i).hasMoreElements()) {
+					String name;
+					String email;
+					String degree;
+					int grad;
+					int sid;
+					
+					
+				}
+			}*/
+			
+			
+			
+		
 			
 		}
 
@@ -63,8 +88,8 @@ public class Tmp {
 		    //<name>:<degree>로return 
 		    public String show_degree(@RequestParam(value="name") String name)
 		    {	
-			 	String t=unders.
-			 	return t;
+				
+			 	return name;
 			 }
 
 		 @RequestMapping("/email")
