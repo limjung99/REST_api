@@ -19,8 +19,5 @@ public class Human {
 	 String get_name() {return myname;}
 	 String get_email() {return email;}
 	 String get_degree() {return degree;}
-	 int get_graduation() {return graduation;}
-	 
-	 
-	 
+	 int get_graduation() {return graduation;} 
 }

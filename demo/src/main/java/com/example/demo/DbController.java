@@ -12,19 +12,26 @@ public class DbController {
 	static void initialize_DB() {
 		try (Connection connection = DriverManager.getConnection(connurl, user, password);) {
             Statement stmt = connection.createStatement();
-            String sql = "CREATE TABLE students(sid INTEGER NOT NULL, name VARCHAR(100), email VARCHAR(100), degree VARCHAR(100), graduation INTEGER, PRIMARY KEY(sid)) ";
+            String sql = "CREATE TABLE students(sid INTEGER NOT NULL, name VARCHAR(100), email VARCHAR(100), degree VARCHAR(100), graduation INTEGER, PRIMARY KEY(sid)); ";
             stmt.executeQuery(sql);
-            stmt.close();
-            connection.close();
    
         }
         catch (SQLException e) {
             e.printStackTrace();
         }
+		
+	}
+	
+	static void clear_the_table() throws SQLException {
+		try(Connection connection = DriverManager.getConnection(connurl,user,password)){
+			Statement stmt = connection.createStatement();
+			String sql = "truncate table students;";
+			stmt.executeUpdate(sql);
+		}
 	}
 	
 
-	static void insert_to_DB(Human h) throws SQLException { //human object를 전달받아, 데이터베이스
+	static void insert_to_DB(Human h) throws SQLException { //human object를 전달받아, 데이터베이스에 input하여 update
 		 try (Connection connection = DriverManager.getConnection(connurl, user, password);) {
 	            Statement stmt = connection.createStatement();
 	            int sid = h.get_sid()	;
@@ -33,8 +40,9 @@ public class DbController {
 	            String degree = h.get_degree();
 	            int grad = h.get_graduation();
 	            String sql = "insert into students values ("+sid+",'"+name+"','"+email+"','"+degree+"',"+grad+")";
-	            ResultSet rs= stmt.executeQuery(sql);
-	            
+	            stmt.executeUpdate(sql);
+	            stmt.close();
+	            connection.close();
 	       
 	        }
 	        catch (SQLException e) {
@@ -47,6 +55,7 @@ public class DbController {
 		try (Connection connection = DriverManager.getConnection(connurl, user, password);) {
             Statement stmt = connection.createStatement();
             rs = stmt.executeQuery(sql);
+            
         }
         catch (SQLException e) {
         	e.printStackTrace();
@@ -56,11 +65,12 @@ public class DbController {
 		
 	}
 	
-	static int update_query(String sql) throws SQLException { //요청된 query를 실행 
+	static int update_query(String sql) throws SQLException { //table update한당.
 		int r=0;
 		try (Connection connection = DriverManager.getConnection(connurl, user, password);) {
             Statement stmt = connection.createStatement();
             r = stmt.executeUpdate(sql);
+            
         }
         catch (SQLException e) {
         	e.printStackTrace();

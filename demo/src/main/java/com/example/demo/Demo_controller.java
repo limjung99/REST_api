@@ -22,7 +22,7 @@ import java.util.Vector;
 // Annotation
 @Controller
 @RequestMapping("Endpoint/students")
-public class Tmp {
+public class Demo_controller {
 	//처음 local서버가 구동될때, html값을 crawling해오고, db에 넣고 close
 		Document h;
 		DbController dcon;
@@ -31,7 +31,10 @@ public class Tmp {
 		Vector<Human> v;
 		
 		//constructor
-		Tmp() throws ClassNotFoundException, SQLException { // 생성될 때, 크롤링 후 파싱 & DB에 insert
+		Demo_controller() throws ClassNotFoundException, SQLException { // 생성될 때, 크롤링 후 파싱 & DB에 insert
+			
+			DbController.clear_the_table(); //table초기화 
+			
 			try {
 				String URL = "https://apl.hongik.ac.kr/lecture/dbms";
 				org.jsoup.Connection conn = Jsoup.connect(URL);
@@ -63,7 +66,9 @@ public class Tmp {
 						String email = st.nextToken().trim();
 					
 						int graduation = Integer.parseInt(st.nextToken().trim());
+						
 						int tmp_sid = sid;
+						
 						sid++;
 						String degree = "";
 						if(i==0) {
@@ -82,20 +87,21 @@ public class Tmp {
 				}
 			}
 			
-			/*DbController.initialize_DB();*/ //DB생성 hongik->students
+			//DbController.initialize_DB();//hongik->students table 생성 
 			
-			//human object vector를 순회하면서, 각 human을 데이터베이스에 인풋
-			//처음 긁어온 html을 li별로 parsing 후 human 객체를 생성해주었다.
-			//이 후 , human객체의 배열을 DB에 순회하면서 넣어준다. 
+//			human object vector를 순회하면서, 각 human을 데이터베이스에 인풋
+//			처음 긁어온 html을 li별로 parsing 후 human 객체를 생성해주었다.
+//			이 후 , human객체의 배열을 DB에 순회하면서 넣어준다. 
+//			
 			
-			
-		/*	for(int i=0;i<v.size();i++) {
+			for(int i=0;i<v.size();i++) {
 				DbController.insert_to_DB(v.get(i)); 
-			}*/
-			
+			}
+		}
+		
 	
 			
-		}
+		
 
 		@RequestMapping("/degree")
 		    //get  Method
@@ -163,6 +169,15 @@ public class Tmp {
 		    {
 			 	ResultSet rs;
 				String ans="Number of "+degree+"'s student:";
+				if (degree == "phd") {
+					degree = "phD";
+				}
+				else if(degree == "master") {
+					degree = "Master";
+				}
+				else if(degree == "undergrad") {
+					degree = "Undergraduate";
+				}
 				String sql = "select count(*) from students where degree='"+degree+"'";
 	
 				rs=DbController.execute_query(sql);
@@ -178,7 +193,7 @@ public class Tmp {
 		 @RequestMapping(value="/register", method = RequestMethod.PUT)
 		    // put Method
 		    @ResponseBody
-		    public String regist (@RequestParam String name,@RequestParam String email,@RequestParam int grad ) throws SQLException 
+		    public String register (@RequestParam String name,@RequestParam String email,@RequestParam int grad ,@RequestParam String degree) throws SQLException 
 		    {
 			 	//동명이인 찾기
 			 	String ans="";
@@ -191,8 +206,17 @@ public class Tmp {
 				 	rs = DbController.execute_query(sql);
 				 	rs.next();
 				 	int new_sid=rs.getInt(1)+1;
-				 	
-				 	sql = "insert into students values ("+new_sid+",'"+name+"','"+email+"','undergraduate',"+grad+")";
+				 	if(degree=="phd") {
+				 		degree = "PhD";
+				 	}
+				 	else if(degree == "master") {
+				 		degree="Master";
+				 	}
+				 	else if(degree == "undergrad") {
+				 		degree="Undergraduate";
+				 	}
+				 		
+				 	sql = "insert into students values ("+new_sid+",'"+name+"','"+email+" ',' " + degree + " ',"+grad+")";
 				 	int t= DbController.update_query(sql);
 				 	ans = "Registration successful";
 			 	}
